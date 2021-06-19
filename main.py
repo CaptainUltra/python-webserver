@@ -17,15 +17,23 @@ while True:
 
     # Get the client request
     requestData = clientConnection.recv(1024)
-    decodedData = requestData.decode('utf-8')
+    decodedData = requestData.decode()
     print(decodedData)
 
+    # Parse HTTP headers
+    headers = decodedData.split('\r\n')
+    filename = headers[0].split()[1]
+
+    # Get the content of the file
+    if filename == '/':
+        filename = '/index.html'
+
+    fin = open('htdocs' + filename)
+    content = fin.read()
+    fin.close()
+
     # Prepare and send the response
-    httpResponse = b"""\
-    HTTP/1.1 200 OK
+    httpResponse = 'HTTP/1.0 200 OK\n\n' + content
 
-    Hello, World!
-    """
-
-    clientConnection.sendall(httpResponse)
+    clientConnection.sendall(httpResponse.encode())
     clientConnection.close()
