@@ -28,12 +28,16 @@ while True:
     if filename == '/':
         filename = '/index.html'
 
-    fin = open('htdocs' + filename)
-    content = fin.read()
-    fin.close()
+    try:
+        fin = open('htdocs' + filename)
+        content = fin.read()
+        fin.close()
 
-    # Prepare and send the response
-    httpResponse = 'HTTP/1.0 200 OK\n\n' + content
+        httpResponse = 'HTTP/1.0 200 OK\n\n' + content
+    except FileNotFoundError:
 
+        httpResponse = 'HTTP/1.0 404 Not Found\n\nRequested file path is not valid.'
+
+    # Send the HTTP response
     clientConnection.sendall(httpResponse.encode())
     clientConnection.close()
