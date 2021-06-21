@@ -8,8 +8,18 @@ SERVER_ADDRESS = (HOST, PORT) = '', 8888
 REQUEST_QUEUE_SIZE = 5
 
 
-def grim_reaper(signum, frame):
-    pid, status = os.wait()
+def sigchld_handler(signum, frame):
+    while True:
+        try:
+            # PID -1 makes it wait for any child process
+            # Do not get blocked by an unknown status; return EWOULDBLOCK error
+            pid, status = os.waitpid(-1, os.WNOHANG)
+        except OSError:
+            return
+
+        if pid == 0:
+            return
+
 
 def handle_request(client_connection):
     # Get the client request
@@ -58,7 +68,7 @@ def serve_forever():
     print(f'Serving HTTP on port {PORT}...')
     print('Parent PID (PPID): {pid}\n'.format(pid=os.getpid()))
 
-    signal.signal(signal.SIGCHLD, grim_reaper)
+    signal.signal(signal.SIGCHLD, sigchld_handler)
 
     while True:
         try:
