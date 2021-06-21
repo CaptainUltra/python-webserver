@@ -1,3 +1,4 @@
+import errno
 import os
 import signal
 import socket
@@ -60,8 +61,17 @@ def serve_forever():
     signal.signal(signal.SIGCHLD, grim_reaper)
 
     while True:
-        # Wait for client connections
-        client_connection, client_address = listen_socket.accept()
+        try:
+            # Wait for client connections
+            client_connection, client_address = listen_socket.accept()
+        except IOError as e:
+            code, msg = e.args
+            # Restart accept() if it was interrupted
+            if code == errno.EINTR:
+                continue
+            else:
+                raise
+
         pid = os.fork()  # Returns 0 in the child and the child's process id in the parent.
         if pid == 0:  # child
             listen_socket.close()  # Close child's duplicate of the socket as it's not needed.
