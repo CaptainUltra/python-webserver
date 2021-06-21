@@ -1,10 +1,14 @@
 import os
+import signal
 import socket
 
 # Define constant configuration variables
 SERVER_ADDRESS = (HOST, PORT) = '', 8888
 REQUEST_QUEUE_SIZE = 5
 
+
+def grim_reaper(signum, frame):
+    pid, status = os.wait()
 
 def handle_request(client_connection):
     # Get the client request
@@ -52,6 +56,8 @@ def serve_forever():
     # Output that the server is active
     print(f'Serving HTTP on port {PORT}...')
     print('Parent PID (PPID): {pid}\n'.format(pid=os.getpid()))
+
+    signal.signal(signal.SIGCHLD, grim_reaper)
 
     while True:
         # Wait for client connections
