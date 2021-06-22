@@ -36,22 +36,26 @@ def handle_request(client_connection):
     )
 
     # Parse HTTP headers
-    headers = decoded_data.split('\r\n')
-    filename = headers[0].split()[1]
-
-    # Get the content of the file
-    if filename == '/':
-        filename = '/index.html'
 
     try:
+        headers = decoded_data.split('\r\n')
+        filename = headers[0].split()[1]
+
+        # Get the content of the file
+        if filename == '/':
+            filename = '/index.html'
+
         fin = open('htdocs' + filename)
         content = fin.read()
         fin.close()
 
         http_response = 'HTTP/1.0 200 OK\n\n' + content
+    except IndexError:
+        http_response = 'HTTP/1.0 400 Bad Request\n\nThe request was invalid.'
     except FileNotFoundError:
-
         http_response = 'HTTP/1.0 404 Not Found\n\nRequested file path is not valid.'
+    except:
+        http_response = 'HTTP/1.0 500 Internal Server Error\n\nThe server encountered an error.'
 
     # Send the HTTP response
     client_connection.sendall(http_response.encode())
