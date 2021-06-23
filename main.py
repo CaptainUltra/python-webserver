@@ -22,22 +22,22 @@ def sigchld_handler(signum, frame):
 
 
 def handle_request(client_connection):
-    # Get the client request
-    request_data = client_connection.recv(1024)
-    decoded_data = request_data.decode()
-    print(decoded_data)
-
-    # Print PIDs
-    print(
-        'Child PID: {pid}. Parent PID {ppid}'.format(
-            pid=os.getpid(),
-            ppid=os.getppid(),
-        )
-    )
-
-    # Parse HTTP headers
-
     try:
+        # Get the client request
+        client_connection.settimeout(1)
+        request_data = client_connection.recv(1024)
+        decoded_data = request_data.decode()
+        print(decoded_data)
+
+        # Print PIDs
+        print(
+            'Child PID: {pid}. Parent PID {ppid}'.format(
+                pid=os.getpid(),
+                ppid=os.getppid(),
+            )
+        )
+
+        # Parse HTTP headers
         headers = decoded_data.split('\r\n')
         filename = headers[0].split()[1]
 
@@ -54,6 +54,8 @@ def handle_request(client_connection):
         http_response = 'HTTP/1.0 400 Bad Request\n\nThe request was invalid.'
     except FileNotFoundError:
         http_response = 'HTTP/1.0 404 Not Found\n\nRequested file path is not valid.'
+    except TimeoutError:
+        http_response = 'HTTP/1.0 504 Gateway Timeout\n\nConnection timed out.'
     except:
         http_response = 'HTTP/1.0 500 Internal Server Error\n\nThe server encountered an error.'
 
