@@ -33,6 +33,12 @@ def process_post_request(data):
     return 'HTTP/1.0 201 Created\n\n' + data
 
 
+def process_put_patch_request(data):
+    if not data:
+        return 'HTTP/1.0 422 Unprocessable Entity\n\nData was invalid.'
+    return 'HTTP/1.0 200 OK\n\n' + data
+
+
 def sigchld_handler(signum, frame):
     while True:
         try:
@@ -69,6 +75,8 @@ def handle_request(client_connection):
         switcher = {
             'GET': process_get_request(headers),
             'POST': process_post_request(decoded_data[1]),
+            'PUT': process_put_patch_request(decoded_data[1]),
+            'PATCH': process_put_patch_request(decoded_data[1]),
         }
 
         http_response = switcher.get(request_type)
