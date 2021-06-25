@@ -8,6 +8,25 @@ SERVER_ADDRESS = (HOST, PORT) = '', 8888
 REQUEST_QUEUE_SIZE = 1024
 
 
+def get_file(filename):
+    if filename == '/':
+        filename = '/index.html'
+
+    fin = open('htdocs' + filename)
+    content = fin.read()
+    fin.close()
+    return content
+
+
+def process_get_request(headers):
+    filename = headers[0].split()[1]
+
+    # Get the content of the file
+    content = get_file(filename)
+
+    return 'HTTP/1.0 200 OK\n\n' + content
+
+
 def sigchld_handler(signum, frame):
     while True:
         try:
@@ -39,17 +58,14 @@ def handle_request(client_connection):
 
         # Parse HTTP headers
         headers = decoded_data.split('\r\n')
-        filename = headers[0].split()[1]
+        request_type = headers[0].split()[0]
 
-        # Get the content of the file
-        if filename == '/':
-            filename = '/index.html'
+        switcher = {
+            'GET': process_get_request(headers),
+        }
 
-        fin = open('htdocs' + filename)
-        content = fin.read()
-        fin.close()
+        http_response = switcher.get(request_type)
 
-        http_response = 'HTTP/1.0 200 OK\n\n' + content
     except IndexError:
         http_response = 'HTTP/1.0 400 Bad Request\n\nThe request was invalid.'
     except FileNotFoundError:
