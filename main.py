@@ -39,6 +39,11 @@ def process_put_patch_request(data):
     return 'HTTP/1.0 200 OK\n\n' + data
 
 
+def process_delete_request(headers):
+    filename = headers[0].split()[1]  # File to delete
+
+    return 'HTTP/1.0 204 No Content\n\n'
+
 def sigchld_handler(signum, frame):
     while True:
         try:
@@ -77,6 +82,7 @@ def handle_request(client_connection):
             'POST': process_post_request(decoded_data[1]),
             'PUT': process_put_patch_request(decoded_data[1]),
             'PATCH': process_put_patch_request(decoded_data[1]),
+            'DELETE': process_delete_request(headers),
         }
 
         http_response = switcher.get(request_type)
