@@ -27,6 +27,12 @@ def process_get_request(headers):
     return 'HTTP/1.0 200 OK\n\n' + content
 
 
+def process_post_request(data):
+    if not data:
+        return 'HTTP/1.0 422 Unprocessable Entity\n\nData was invalid.'
+    return 'HTTP/1.0 201 Created\n\n' + data
+
+
 def sigchld_handler(signum, frame):
     while True:
         try:
@@ -45,8 +51,8 @@ def handle_request(client_connection):
         # Get the client request
         client_connection.settimeout(1)
         request_data = client_connection.recv(1024)
-        decoded_data = request_data.decode()
-        print(decoded_data)
+        decoded_data = request_data.decode().split('\r\n\r\n')
+        print(decoded_data[0])
 
         # Print PIDs
         print(
@@ -57,11 +63,12 @@ def handle_request(client_connection):
         )
 
         # Parse HTTP headers
-        headers = decoded_data.split('\r\n')
+        headers = decoded_data[0].split('\r\n')
         request_type = headers[0].split()[0]
 
         switcher = {
             'GET': process_get_request(headers),
+            'POST': process_post_request(decoded_data[1]),
         }
 
         http_response = switcher.get(request_type)
